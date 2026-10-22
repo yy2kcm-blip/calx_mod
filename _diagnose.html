@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CalcX 離線版 · PWA 安裝診斷</title>
+<style>
+  :root { color-scheme: light; --ok:#1f7a4d; --bad:#b03030; --warn:#a8681a; --ink:#203348; --muted:#63768b; --line:#dce5ee; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px 14px 48px; font:15px/1.75 system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; color:var(--ink); background:#f4f8fc; }
+  h1 { font-size:19px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 16px; }
+  .verdict { border-radius:14px; padding:14px 16px; margin:0 0 16px; font-weight:700; font-size:15px; }
+  .verdict.ok { background:#e6f5ec; color:var(--ok); border:1px solid #b9dfc9; }
+  .verdict.bad { background:#fdecec; color:var(--bad); border:1px solid #f0c4c4; }
+  .verdict.warn { background:#fdf3e2; color:var(--warn); border:1px solid #f0dcb4; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:1.2px; color:#7b90a8; margin:22px 0 8px; }
+  .row { display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); align-items:flex-start; }
+  .mark { flex:0 0 20px; font-weight:800; }
+  .ok .mark { color:var(--ok); } .bad .mark { color:var(--bad); } .warn .mark { color:var(--warn); }
+  .name { flex:1 1 auto; font-size:14px; }
+  .val { color:var(--muted); font-size:12px; word-break:break-all; }
+  .fix { margin:4px 0 0 30px; font-size:12.5px; color:var(--warn); background:#fdf6ea; border-left:3px solid #e6bd74; padding:6px 10px; border-radius:0 6px 6px 0; }
+  .howto { background:white; border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:10px 0; }
+  .howto h3 { margin:0 0 8px; font-size:14px; }
+  .howto ol, .howto ul { margin:0; padding-left:20px; }
+  .howto li { margin:5px 0; font-size:13.5px; }
+  code { background:#eef3f8; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+  a { color:#246ddd; }
+</style>
+</head>
+<body>
+<h1>CalcX 離線版 · PWA 安裝診斷</h1>
+<p class="sub">用同一台手機、同樣的瀏覽器打開這個頁面，就知道「為什麼沒有安裝選項」。</p>
+
+<div id="verdict" class="verdict warn">檢查中…</div>
+
+<h2>檢查結果</h2>
+<div id="rows"></div>
+
+<h2>依你的平台，���裝選項在這裡</h2>
+
+<div class="howto">
+  <h3>iPhone / iPad（必須用 Safari）</h3>
+  <ol>
+    <li>用 <b>Safari</b> 打開（Chrome / Firefox on iOS <b>不會</b>顯示安裝選項）</li>
+    <li>點底部中間的 <b>分享</b> 按鈕（方框向上箭頭）</li>
+    <li>在選單裡往下滑，找到 <b>「加入主畫面」</b> → 右上角 <b>「新增」</b></li>
+    <li>iOS 16.4 以下會變成普通書籤（能用，但不會獨立視窗）</li>
+  </ol>
+  <p style="margin:10px 0 0;font-size:13px;color:var(--muted)">
+  iOS 沒有浮動的安裝橫幅，<b>只有分享選單裡那一項</b>，很多人找不到就是這個原因。</p>
+</div>
+
+<div class="howto">
+  <h3>Android（Chrome / Edge）</h3>
+  <ol>
+    <li>右上角 <b>⋮</b> 選單 → <b>「安裝應用程式」</b> 或 <b>「加入主畫面」</b></li>
+    <li>自動提示橫幅需要使用者先跟網站有互動，而且<b>不一定會出現</b>；直接用選單最可靠</li>
+    <li>若選單裡也沒有 → 看下面的檢查結果，通常是 manifest 或 Service Worker 的問題</li>
+  </ol>
+</div>
+
+<div class="howto">
+  <h3>桌面 Chrome / Edge</h3>
+  <ol>
+    <li>網址列右邊會出現一個 <b>安裝圖示</b>（電腦 + 箭頭）</li>
+    <li>或用 <b>⋮ → 鑄造安裝</b></li>
+  </ol>
+</div>
+
+<h2>最常見的五個原因</h2>
+<div class="howto">
+  <ol>
+    <li><b>iOS 上用了 Chrome/Firefox</b> → 換 Safari</li>
+    <li><b>Service Worker 註冊失敗</b> → Console 裡會有紅字（看下面的檢查結果）</li>
+    <li><b>.webmanifest 的 MIME 錯了</b> → 必須是 <code>application/manifest+json</code></li>
+    <li><b>網站不是 HTTPS</b> → <code>http://</code> 下不能安裝（<code>localhost</code> 除外）</li>
+    <li><b>瀏覽器已經裝過、或曾經忽略過提示</b> → 清除網站資料後重試</li>
+  </ol>
+</div>
+
+<script>
+const rows = [];
+function add(ok, name, val, fix) {
+  rows.push({ ok, name, val, fix });
+  const el = document.createElement('div');
+  el.className = 'row ' + (ok === true ? 'ok' : ok === false ? 'bad' : 'warn');
+  el.innerHTML = '<div class="mark">' + (ok === true ? '✓' : ok === false ? '✗' : '!') + '</div>' +
+    '<div class="name">' + name + (val ? '<div class="val">' + val + '</div>' : '') + '</div>' +
+    (fix ? '<div class="fix">' + fix + '</div>' : '');
+  document.getElementById('rows').appendChild(el);
+}
+function verdict(cls, text) {
+  const v = document.getElementById('verdict');
+  v.className = 'verdict ' + cls;
+  v.textContent = text;
+}
+const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+(async () => {
+  // 1. 协议
+  const https = location.protocol === 'https:';
+  add(https, '使用 HTTPS', location.protocol,
+      https ? '' : 'Service Worker 與「安裝」都需要 HTTPS。Cloudflare Pages / GitHub Pages / Vercel 預設就是 HTTPS。');
+
+  // 2. manifest 連結
+  const link = document.querySelector('link[rel="manifest"]');
+  add(!!link, 'HTML 有引用 manifest', link ? link.getAttribute('href') : '找不到 <link rel="manifest">');
+  let manifest = null;
+  if (link) {
+    const url = new URL(link.getAttribute('href'), location.href);
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      const ct = res.headers.get('content-type') || '(無)';
+      add(res.ok, 'manifest 取得到', res.status + ' · ' + ct,
+          res.ok ? '' : 'manifest 抓不到，Service Worker 預快取清單可能漏了它。');
+      const good = /manifest\+json|application\/json/i.test(ct);
+      add(good, 'manifest 的 MIME 正確', ct,
+          good ? '' : '瀏覽器不認這個 MIME 就不會安裝。空間需回 <code>application/manifest+json</code>。');
+      const text = await res.text();
+      try { manifest = JSON.parse(text); add(true, 'manifest 是合法 JSON'); }
+      catch (e) { add(false, 'manifest 是合法 JSON', e.message, '內容可能被 HTML 錯誤頁蓋掉了。'); }
+    } catch (e) {
+      add(false, 'manifest 取得到', e.message);
+    }
+  }
+
+  // 3. manifest 欄位
+  if (manifest) {
+    const need = ['name','short_name','start_url','scope','display','icons'];
+    for (const k of need) add(manifest[k] !== undefined, 'manifest.' + k,
+        manifest[k] === undefined ? '缺少' : (typeof manifest[k] === 'object' ? (manifest[k].length + ' 項') : manifest[k]),
+        manifest[k] === undefined ? 'Chrome 會因此判定為「不可安裝」。' : '');
+    add(manifest.display === 'standalone', 'display = standalone', manifest.display,
+        manifest.display === 'standalone' ? '' : '不是 standalone 就不會有獨立視窗。');
+    const icons = manifest.icons || [];
+    const has192 = icons.some(i => i.sizes === '192x192');
+    const has512 = icons.some(i => i.sizes === '512x512');
+    add(has192 && has512, '有 192x192 與 512x512 圖標', icons.map(i => i.sizes).join(', '),
+        (has192 && has512) ? '' : '兩個尺寸都要有，缺一個就不算可安裝。');
+    for (const ic of icons) {
+      try {
+        const r = await fetch(new URL(ic.src, location.href), { cache: 'no-store' });
+        add(r.ok, '圖標可取 ' + ic.sizes, r.status + ' · ' + (r.headers.get('content-type') || ''));
+      } catch (e) { add(false, '圖標可取 ' + ic.sizes, e.message); }
+    }
+  }
+
+  // 4. Service Worker
+  if ('serviceWorker' in navigator) {
+    add(true, '瀏覽器支援 Service Worker');
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      add(regs.length > 0, 'Service Worker 已註冊', regs.length + ' 個' + (regs[0] ? ' · scope ' + regs[0].scope : ''),
+          regs.length ? '' : '沒有註冊＝不可安裝。回首頁看 Console 有沒有紅字。');
+      add(!!navigator.serviceWorker.controller, '目前頁面已被 Service Worker 控制',
+          navigator.serviceWorker.controller ? '是' : '否（第一次訪問通常要重載一次）',
+          navigator.serviceWorker.controller ? '' : '重載一次頁面就會被接管。');
+    } catch (e) { add(false, 'Service Worker 註冊狀態', e.message); }
+  } else {
+    add(false, '瀏覽器支援 Service Worker', '不支援',
+        'iOS 16.4 以下不支援完整的 Web App 能力。');
+  }
+
+  // 5. 快取
+  if (window.caches) {
+    try {
+      const keys = await caches.keys();
+      add(keys.length > 0, 'Cache Storage 有內容', keys.join(', ') || '空',
+          keys.length ? '' : '沒有快取＝沒有離線能力。回首頁讓 SW 完成 install。');
+      if (keys.length) {
+        const c = await caches.open(keys[0]);
+        const reqs = await c.keys();
+        add(reqs.length > 20, '已預快取資源', reqs.length + ' 項',
+            reqs.length > 20 ? '' : '預快取不完整，離線時會缺檔。');
+      }
+    } catch (e) { add(false, '讀取 Cache Storage', e.message); }
+  }
+
+  // 結論
+  const bad = rows.filter(r => r.ok === false);
+  const warn = rows.filter(r => r.ok === 'warn' || r.ok === null);
+  if (bad.length) {
+    verdict('bad', '有 ' + bad.length + ' 項未通過 —— 這就是沒有安裝選項的原因');
+  } else if (warn.length) {
+    verdict('warn', '全部通過。沒看到安裝選項是平台差異，看上面「安裝選項在這裡」。');
+  } else {
+    verdict('ok', '全部通過，PWA 條件齊備。若仍無安裝選項，請看上面的平台說明。');
+  }
+})();
+</script>
+</body>
+</html>

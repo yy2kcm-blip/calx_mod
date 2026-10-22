@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f8fc"><meta name="description" content="CalcX，為 HKDSE Mathematics 與 M2 而設的在線科學計算器。支援複數及 Program 編輯。">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CalcX">
+<title>CalcX · 在線科學計算器</title><link rel="stylesheet" href="./style.css">
+</head><body>
+<main class="page" id="calculator">
+<section class="calculator" aria-label="fx-50FH II 計算器">
+<div id="shell" class="shell" tabindex="-1"><canvas id="lcd" aria-hidden="true"></canvas><output id="lcd-accessible" class="sr-only" aria-live="polite" aria-atomic="true"></output></div>
+<output id="status" class="status" aria-live="polite"></output>
+<button class="studio-open" type="button" data-open-studio>Program Studio · 編輯程式</button>
+<details class="compact-help"><summary>使用說明 · CalcX Public Beta 0.2.8</summary><p>MODE 選擇模式，SHIFT → MODE 開啟 SETUP。Prog 運行已保存的程式。</p><p>鍵盤：Enter = EXE，Backspace = DEL，Esc = AC，Space = SHIFT，方向鍵 = REPLAY。</p><p>程式只儲存在目前瀏覽器，請用 Program Studio 下載備份。</p><p>非官方模擬器，與 CASIO 或 HKEAA 無關。重要結果請以真機核對。</p><p>本機離線副本：非官方模擬器，與 CASIO 或 HKEAA 無關；不可用於公開考試。</p><p><a href="./LICENSE">MIT 許可</a> · <a href="./NOTICE.txt">來源與素材</a></p></details>
+</section></main>
+<dialog id="studio-dialog" aria-labelledby="studio-title"><header class="dialog-header"><div><p class="eyebrow">CALCX WORKSPACE</p><h2 id="studio-title">Program Studio</h2></div><button class="close-button" id="studio-close" type="button" aria-label="關閉 Program Studio">×</button></header>
+  <div class="dialog-content"><div class="slot-tabs" role="group" aria-label="Program 位置"><button type="button" data-slot="0" aria-pressed="true">P1</button><button type="button" data-slot="1" aria-pressed="false">P2</button><button type="button" data-slot="2" aria-pressed="false">P3</button><button type="button" data-slot="3" aria-pressed="false">P4</button></div>
+    <div class="editor-toolbar"><label for="studio-mode">計算模式 <select id="studio-mode"><option>COMP</option><option>CMPLX</option><option>BASE</option><option>SD</option><option>REG</option></select></label><output id="program-bytes">0 / 680 B</output></div>
+    <label class="editor-label" for="program-source">P1 程式內容</label><textarea id="program-source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" maxlength="20000" placeholder="每行一個指令，也可用 : 分隔。" aria-describedby="editor-tip program-feedback"></textarea>
+    <div class="symbol-palette" role="group" aria-label="插入程式符號"><button type="button" data-insert="?">?</button><button type="button" data-insert="→">→</button><button type="button" data-insert="◢">◢</button><button type="button" data-insert=":">:</button><button type="button" data-insert="²">x²</button><button type="button" data-insert="√(">√(</button><button type="button" data-insert="π">π</button><button type="button" data-insert="If ">If</button><button type="button" data-insert="While ">While</button><button type="button" data-insert="WhileEnd">WhileEnd</button></div>
+    <p id="editor-tip" class="editor-tip">? 輸入 · → 賦值 · ◢ 顯示並暫停。保存會替換目前位置，可撤銷上次保存。</p><output id="program-feedback" role="status" aria-live="polite"></output><p id="draft-status" class="draft-status"></p>
+  </div><footer class="dialog-actions"><div class="secondary-actions"><button type="button" id="studio-export">下載文字</button><button type="button" id="studio-undo" disabled>撤銷保存</button></div><div class="save-actions"><button type="button" id="studio-save">保存到 P1</button><button class="primary" type="button" id="studio-run">保存並運行</button></div></footer>
+</dialog><script type="module" src="./app.js"></script><script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  });
+}
+</script>
+</body></html>

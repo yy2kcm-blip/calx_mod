@@ -1,0 +1,5 @@
+Based on throwingogo-hub/fx-50fh-ii, upstream main 54a25e6.
+Copyright (c) 2026 throwingogo-hub. Upstream MIT license retained in LICENSE.
+The calculator faceplate is generated artwork supplied by the owner, who confirmed its source and permission for public use on 2026-10-11. Artwork permission is separate from the upstream code license.
+CASIO and fx-50FH II identify the simulated device. This project is not affiliated with or endorsed by CASIO or HKEAA. Printed approval markings reproduce the depicted device; they do not certify this simulator.
+Beta software: verify important results against a physical calculator.
