@@ -1,0 +1,19 @@
+name: Deploy to Pages
+on:
+  push:
+    branches: [main]          # ← 触发条件：推 main 就跑
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4              # 1. 把仓库代码下载下来
+      - uses: actions/configure-pages@v5       # 2. 取得发布权限
+      - uses: actions/upload-pages-artifact@v3 # 3. 把网站文件打包
+        with:
+          path: '.'                            #    ← 仓库根目录 = 网站根目录
+      - id: deployment
+        uses: actions/deploy-pages@v4          # 4. 发布出去
